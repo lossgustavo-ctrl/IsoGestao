@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ISOESTE Metálica – Gerenciamento de Projetos</title>
+  <style>
+    :root { --bg:#0f172a; --panel:#111827; --muted:#1f2937; --soft:#0b1223; --text:#e5e7eb; --subtext:#9ca3af; --primary:#60a5fa; --accent:#34d399; --warning:#f59e0b; --danger:#f87171; --border:#374151; --ok:#22c55e; }
+    *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:radial-gradient(1200px 800px at 10% -10%, #1a243a 0%, var(--bg) 40%), var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    a{color:inherit;text-decoration:none}
+    .app{display:grid;grid-template-columns:280px 1fr;height:100%}
+    /* Sidebar */
+    .sidebar{background:linear-gradient(180deg,rgba(17,24,39,.9),rgba(17,24,39,.7)),radial-gradient(800px 400px at 0% 0%,#172036,transparent 60%);border-right:1px solid var(--border);padding:18px;position:relative}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.3px}
+    .logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--primary),#8b5cf6);display:grid;place-items:center;font-weight:800;color:white}
+    .side-group{margin-top:22px}.side-title{color:var(--subtext);font-size:12px;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+    .side-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#cbd5e1;cursor:pointer}
+    .side-item:hover{background:#0b1223}.side-item.active{background:#0b1223;outline:1px solid #1f2b49;color:white}
+    .chip{font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:999px;color:var(--subtext)}
+    /* Main */
+    .main{display:flex;flex-direction:column;height:100%}
+    .topbar{display:grid;grid-template-columns:260px 1fr auto auto;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(2,6,23,.6),rgba(2,6,23,0));position:sticky;top:0;z-index:5}
+    .select,.input{width:100%;background:#0b1223;border:1px solid #1f2b49;color:#e5e7eb;padding:10px 12px;border-radius:12px;outline:none}
+    .input::placeholder{color:#64748b}
+    .btn{background:linear-gradient(180deg,#1e293b,#111827);border:1px solid #24324d;color:#e5e7eb;padding:10px 14px;border-radius:12px;cursor:pointer}
+    .btn:hover{filter:brightness(1.1)} .btn.primary{background:linear-gradient(180deg,#2563eb,#1e3a8a);border-color:#1e40af}
+    .content{padding:18px 20px 80px;overflow:auto;height:100%}
+    /* Cards */
+    .cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+    .card{background:linear-gradient(180deg,rgba(17,24,39,.8),rgba(15,23,42,.8));border:1px solid #1f2b49;border-radius:16px;padding:14px}
+    .card h4{margin:0 0 6px;font-weight:600;color:#cbd5e1}.kpi{display:flex;align-items:baseline;gap:8px}.num{font-size:26px;font-weight:800;letter-spacing:.5px}
+    /* Tabs */
+    .tabs{margin-top:16px;display:flex;gap:8px;border-bottom:1px solid var(--border)}
+    .tab{padding:10px 12px;border:1px solid transparent;border-bottom:none;border-radius:12px 12px 0 0;cursor:pointer;color:#cbd5e1}
+    .tab.active{background:#0b1223;border-color:#1f2b49;color:white}
+    .tabpanels{background:#0b1223;border:1px solid #1f2b49;border-top:none;border-radius:0 12px 12px 12px;padding:14px;margin-bottom:16px}
+    /* Table (master-detail) */
+    table{width:100%;border-collapse:collapse}
+    th,td{text-align:left;padding:10px;border-bottom:1px solid #1e293b}
+    th{font-weight:600;color:#cbd5e1;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+    tr.hoverable:hover td{background:#0e172d}
+    .badge{padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid #1f2b49}
+    .b-ok{background:rgba(34,197,94,.12);color:#86efac;border-color:rgba(34,197,94,.35)}
+    .b-warn{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.35)}
+    .b-danger{background:rgba(248,113,113,.12);color:#fca5a5;border-color:rgba(248,113,113,.35)}
+    .toggle{cursor:pointer}
+    .subrow td{background:rgba(11,18,35,.6)}
+    .subtable{width:100%;border-collapse:collapse;margin-top:6px}
+    .subtable th,.subtable td{border-bottom:1px dashed #22314f;padding:8px}
+    /* Responsive */
+    @media (max-width:1100px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.app{grid-template-columns:1fr}.sidebar{display:none}.topbar{grid-template-columns:1fr auto auto}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand"><div class="logo">IM</div><div><div>ISOESTE Metálica</div><div style="font-size:12px;color:#93c5fd">Gerenciamento de Projetos</div></div></div>
+      <div class="side-group">
+        <div class="side-title">Processo</div>
+        <div class="side-item active" data-section="overview">Dashboard</div>
+        <div class="side-item" data-section="obra">Obra</div>
+        <div class="side-item" data-section="cronograma">Cronograma</div>
+        <div class="side-item" data-section="liberacao">Liberação / MF</div>
+        <div class="side-item" data-section="montagem">Montagem</div>
+      </div>
+      <div class="side-group">
+        <div class="side-title">Atalhos</div>
+        <div class="side-item" id="openModal"><span>＋</span> Nova Obra</div>
+        <div class="side-item"><span>🗂️</span> Pastas OneDrive</div>
+        <div class="side-item"><span>🔗</span> FLUIG / Trimble</div>
+      </div>
+      <div style="position:absolute; left:18px; right:18px; bottom:18px; display:grid; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="side-title" style="margin:0">Capacidade</div>
+          <div class="chip" id="cap-chip">MG/GO</div>
+        </div>
+        <div class="progress" style="height:8px;border:1px solid #1f2b49;border-radius:999px;overflow:hidden"><i id="cap-bar" style="display:block;height:100%;width:62%;background:linear-gradient(90deg,#60a5fa,#34d399)"></i></div>
+        <div style="display:flex; justify-content:space-between; color:#9ca3af; font-size:12px;">
+          <span>62% ocupado</span><span>Semana 42</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <section class="main">
+      <div class="topbar">
+        <!-- Filtro por Líder (superior esquerda) -->
+        <select id="filtroLider" class="select">
+          <option value="">Filtrar por Líder</option>
+        </select>
+        <input id="search" class="input" placeholder="Buscar obra por nº, nome, cliente…" />
+        <button class="btn" id="btnFiltros">Filtros</button>
+        <button class="btn primary" id="btnNovaObra">＋ Nova Obra</button>
+      </div>
+
+      <div class="content">
+        <!-- CARDS -->
+        <div class="cards">
+          <div class="card"><h4>Total de Obras</h4><div class="kpi"><div class="num" id="k_total">–</div></div></div>
+          <div class="card"><h4>Com Etapas</h4><div class="kpi"><div class="num" id="k_comEtapas">–</div></div></div>
+          <div class="card"><h4>Sem Etapas</h4><div class="kpi"><div class="num" id="k_semEtapas">–</div></div></div>
+          <div class="card"><h4>Em Projeto</h4><div class="kpi"><div class="num" id="k_projeto">–</div></div></div>
+          <div class="card"><h4>Atrasadas</h4><div class="kpi"><div class="num" id="k_atrasadas">–</div></div></div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs" id="tabs">
+          <div class="tab active" data-tab="lista">Lista de Obras</div>
+          <div class="tab" data-tab="metricas">Métricas</div>
+        </div>
+        <div class="tabpanels">
+          <!-- LISTA (Master + Subtabela por Etapas) -->
+          <div class="panel" data-panel="lista">
+            <table id="table-obras">
+              <thead>
+                <tr>
+                  <th style="width:36px"></th>
+                  <th>FLUIG</th>
+                  <th>METALFORCE</th>
+                  <th>OBRA</th>
+                  <th>PESO ORÇADO</th>
+                  <th>PESO A LIBERAR</th>
+                  <th>VALOR FECHADO</th>
+                  <th>VALOR A LIBERAR</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <!-- MÉTRICAS (placeholder) -->
+          <div class="panel" data-panel="metricas" hidden>
+            <div class="card">
+              <h4>Indicadores</h4>
+              <ul style="margin:6px 0 0 18px; color:#cbd5e1;">
+                <li>Obras com etapas x sem etapas</li>
+                <li>Etapas no prazo x atrasadas</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MODAL NOVA OBRA: inclui definição de Etapas -->
+  <div class="modal-backdrop" id="backdrop">
+    <div class="modal">
+      <h3>Nova Obra</h3>
+      <div class="grid-2">
+        <div class="field"><label class="label">Nº (FLUIG)</label><input id="f_id" placeholder="00000" /></div>
+        <div class="field"><label class="label">Metalforce (Pedido)</label><input id="f_mf" placeholder="MF-000000" /></div>
+        <div class="field"><label class="label">Nome da Obra</label><input id="f_nome" placeholder="Ex.: Galpão XYZ - MG" /></div>
+        <div class="field"><label class="label">Cliente</label><input id="f_cliente" placeholder="Cliente S.A." /></div>
+        <div class="field"><label class="label">Líder de Projeto</label><input id="f_lider" placeholder="Lucas / Marcos / Gustavo" /></div>
+        <div class="field"><label class="label">Localização</label><input id="f_local" placeholder="Cidade/UF" /></div>
+        <div class="field"><label class="label">Peso Orçado (kg)</label><input id="f_peso_orcado" placeholder="0" /></div>
+        <div class="field"><label class="label">Valor Fechado (R$)</label><input id="f_valor_fechado" placeholder="0,00" /></div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label class="label">Etapas da Obra (uma por linha)</label>
+        <textarea id="f_etapas" rows="4" placeholder="Ex.:\nEtapa 1 – Galpão A\nEtapa 2 – Mezanino B"></textarea>
+        <div class="help">Se vazio, será criada automaticamente uma <b>Etapa única</b>. Você poderá adicionar novas etapas depois, com <b>duplo clique</b> na obra na Lista.</div>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+        <button class="btn" id="cancelNova">Cancelar</button>
+        <button class="btn primary" id="salvarNova">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ETAPAS (duplo clique na obra) -->
+  <div class="modal-backdrop" id="backEtapas">
+    <div class="modal">
+      <h3>Gerenciar Etapas – <span id="ge_nome">Obra</span></h3>
+      <div class="field">
+        <label class="label">Adicionar nova etapa</label>
+        <input id="ge_nova" placeholder="Nome da etapa" />
+      </div>
+      <div class="field">
+        <label class="label">Etapas</label>
+        <div id="ge_lista" class="card" style="max-height:260px;overflow:auto"></div>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+        <button class="btn" id="ge_cancel">Fechar</button>
+        <button class="btn primary" id="ge_add">Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Mock de dados (3 obras; líderes Lucas, Marcos, Gustavo) =====
+    const obras = [
+      // 1) 2 etapas – Líder Lucas
+      { id:"20001", mf:"MF-500001", nome:"Galpão Logístico – Betim/MG", cliente:"ACME Logística", lider:"Lucas", local:"Betim/MG", pesoOrcado:120000, pesoLiberar:45000, valorFechado:1800000, valorLiberar:540000, status:"Triagem", fluig:"FL-20001",
+        etapas:[
+          { mfEtapa:"MF-500001-01", peso:30000, valor:420000, status:"Triagem", envioEst:"18/10", libEst:"22/10", envioAtu:"—", libAtu:"—", deadline:"25/10", aprovacao:"—", libReal:"—", nome:"Etapa 1 – Bloco A" },
+          { mfEtapa:"MF-500001-02", peso:15000, valor:120000, status:"Cálculo", envioEst:"24/10", libEst:"27/10", envioAtu:"—", libAtu:"—", deadline:"30/10", aprovacao:"—", libReal:"—", nome:"Etapa 2 – Mezanino" }
+        ]
+      },
+      // 2) 1 etapa – Líder Marcos
+      { id:"20002", mf:"MF-500002", nome:"Mezanino Industrial – Itaberaí/GO", cliente:"IsoAgro", lider:"Marcos", local:"Itaberaí/GO", pesoOrcado:65000, pesoLiberar:20000, valorFechado:920000, valorLiberar:220000, status:"Cálculo", fluig:"FL-20002",
+        etapas:[ { mfEtapa:"MF-500002-01", peso:20000, valor:220000, status:"Cálculo", envioEst:"22/10", libEst:"28/10", envioAtu:"—", libAtu:"—", deadline:"31/10", aprovacao:"—", libReal:"—", nome:"Etapa única" } ]
+      },
+      // 3) 5 etapas – Líder Gustavo
+      { id:"20003", mf:"MF-500003", nome:"Planta – Contagem/MG", cliente:"MetalWorks", lider:"Gustavo", local:"Contagem/MG", pesoOrcado:98000, pesoLiberar:54000, valorFechado:1450000, valorLiberar:720000, status:"Projeto", fluig:"FL-20003",
+        etapas:[
+          { mfEtapa:"MF-500003-01", peso:10000, valor:120000, status:"Projeto", envioEst:"15/10", libEst:"20/10", envioAtu:"—", libAtu:"—", deadline:"23/10", aprovacao:"—", libReal:"—", nome:"Etapa 1 – Fundação" },
+          { mfEtapa:"MF-500003-02", peso:12000, valor:150000, status:"Projeto", envioEst:"16/10", libEst:"21/10", envioAtu:"—", libAtu:"—", deadline:"24/10", aprovacao:"—", libReal:"—", nome:"Etapa 2 – Estrutura A" },
+          { mfEtapa:"MF-500003-03", peso:9000,  valor:110000, status:"Projeto", envioEst:"17/10", libEst:"22/10", envioAtu:"—", libAtu:"—", deadline:"25/10", aprovacao:"—", libReal:"—", nome:"Etapa 3 – Estrutura B" },
+          { mfEtapa:"MF-500003-04", peso:14000, valor:180000, status:"Liberação", envioEst:"18/10", libEst:"24/10", envioAtu:"—", libAtu:"—", deadline:"27/10", aprovacao:"—", libReal:"—", nome:"Etapa 4 – Cobertura" },
+          { mfEtapa:"MF-500003-05", peso:9000,  valor:120000, status:"Triagem", envioEst:"19/10", libEst:"26/10", envioAtu:"—", libAtu:"—", deadline:"29/10", aprovacao:"—", libReal:"—", nome:"Etapa 5 – Fechamentos" }
+        ]
+      }
+    ];
+
+    // ===== Utils =====
+    const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
+    const fmtKg = v => (v||0).toLocaleString('pt-BR')+" kg";
+    const fmtR$ = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    const badge = s => `<span class="badge ${s==='Triagem'?'b-warn':s==='Atrasada'?'b-danger':'b-ok'}">${s}</span>`;
+
+    // ===== KPIs =====
+    function renderKPIs(){
+      $('#k_total').textContent = obras.length;
+      const com = obras.filter(o=> (o.etapas||[]).length>0).length;
+      $('#k_comEtapas').textContent = com;
+      $('#k_semEtapas').textContent = obras.length - com;
+      $('#k_projeto').textContent = obras.filter(o=>o.status==='Projeto').length;
+      $('#k_atrasadas').textContent = obras.filter(o=>o.status==='Atrasada').length;
+    }
+
+    // ===== Filtro por Líder =====
+    function initFiltroLider(){
+      const lideres = Array.from(new Set(obras.map(o=>o.lider))).sort();
+      const sel = $('#filtroLider'); sel.innerHTML = '<option value="">Filtrar por Líder</option>';
+      lideres.forEach(l=>{ const opt=document.createElement('option'); opt.value=l; opt.textContent=l; sel.appendChild(opt); });
+      sel.addEventListener('change', ()=> renderTable());
+    }
+
+    // ===== Tabela Master/Detail =====
+    function renderTable(){
+      const tb = $('#table-obras tbody'); tb.innerHTML = '';
+      const q = ($('#search').value||'').toLowerCase();
+      const lfilter = $('#filtroLider').value || '';
+      const list = obras.filter(o=> (!lfilter || o.lider===lfilter) && (o.id+o.mf+o.nome+o.cliente+o.lider).toLowerCase().includes(q));
+
+      list.forEach(o=>{
+        const tr = document.createElement('tr'); tr.className='hoverable toggle'; tr.dataset.row=o.id;
+        tr.innerHTML = `
+          <td>▶</td>
+          <td>${o.fluig || '—'}</td>
+          <td>${o.mf || '—'}</td>
+          <td><strong>${o.nome}</strong><div style="color:#9ca3af;font-size:12px;">${o.cliente} • ${o.lider}</div></td>
+          <td>${fmtKg(o.pesoOrcado)}</td>
+          <td>${fmtKg(o.pesoLiberar)}</td>
+          <td>${fmtR$(o.valorFechado)}</td>
+          <td>${fmtR$(o.valorLiberar)}</td>
+          <td>${badge(o.status)}</td>`;
+        tb.appendChild(tr);
+
+        const sub = document.createElement('tr'); sub.className='subrow'; sub.dataset.sub=o.id; sub.hidden=true;
+        const td = document.createElement('td'); td.colSpan=9; td.innerHTML = renderSubtable(o); sub.appendChild(td); tb.appendChild(sub);
+
+        tr.addEventListener('click', ()=>{ const opened=!sub.hidden; $$('#table-obras tbody tr.subrow').forEach(r=>{ if(r!==sub){ r.hidden=true; const prev=r.previousElementSibling; if(prev && prev.firstElementChild) prev.firstElementChild.textContent='▶'; }}); sub.hidden = opened ? true : false; tr.firstElementChild.textContent = sub.hidden ? '▶' : '▼'; });
+        tr.addEventListener('dblclick', (e)=>{ e.stopPropagation(); openGerenciarEtapas(o); });
+      });
+    }
+
+    function renderSubtable(obra){
+      const etapas = obra.etapas && obra.etapas.length ? obra.etapas : [{ mfEtapa:'—', peso:0, valor:0, status:'Etapa única', envioEst:'—', libEst:'—', envioAtu:'—', libAtu:'—', deadline:'—', aprovacao:'—', libReal:'—' }];
+      let html = `<table class="subtable">
+        <thead>
+          <tr>
+            <th>METALFORCE ETAPA</th>
+            <th>PESO ETAPA</th>
+            <th>VALOR ETAPA</th>
+            <th>STATUS</th>
+            <th>ENVIO APROV. (EST)</th>
+            <th>LIB. ENG. (EST)</th>
+            <th>ENVIO APROV. (ATUAL)</th>
+            <th>LIB. ENG. (ATUAL)</th>
+            <th>DEAD LINE APROVAÇÃO</th>
+            <th>DATA APROVAÇÃO</th>
+            <th>LIB. ENG. (REAL)</th>
+          </tr>
+        </thead>
+        <tbody>`;
+      etapas.forEach(et=>{ html += `<tr>
+          <td>${et.mfEtapa}</td>
+          <td>${fmtKg(et.peso)}</td>
+          <td>${fmtR$(et.valor)}</td>
+          <td>${badge(et.status)}</td>
+          <td>${et.envioEst}</td>
+          <td>${et.libEst}</td>
+          <td>${et.envioAtu}</td>
+          <td>${et.libAtu}</td>
+          <td>${et.deadline}</td>
+          <td>${et.aprovacao}</td>
+          <td>${et.libReal}</td>
+        </tr>`; });
+      html += `</tbody></table>`; return html;
+    }
+
+    // ===== Modal Nova Obra =====
+    const openModal = ()=> $('#backdrop').style.display = 'flex';
+    const closeModal = ()=> $('#backdrop').style.display = 'none';
+    $('#btnNovaObra').addEventListener('click', openModal);
+    $('#openModal').addEventListener('click', openModal);
+    $('#cancelNova').addEventListener('click', closeModal);
+
+    $('#salvarNova').addEventListener('click', ()=>{
+      const id = $('#f_id').value.trim();
+      const mf = $('#f_mf').value.trim();
+      const nome = $('#f_nome').value.trim();
+      const cliente = $('#f_cliente').value.trim();
+      const lider = $('#f_lider').value.trim();
+      const local = $('#f_local').value.trim();
+      const pesoOrcado = parseFloat(($('#f_peso_orcado').value||'0').replace(/\./g,'').replace(',','.'))||0;
+      const valorFechado = parseFloat(($('#f_valor_fechado').value||'0').replace(/\./g,'').replace(',','.'))||0;
+      let etapas = ($('#f_etapas').value||'').split('\n').map(s=>s.trim()).filter(Boolean).map((n,i)=>({ mfEtapa: mf? `${mf}-${String(i+1).padStart(2,'0')}`:'—', peso:0, valor:0, status:'Triagem', envioEst:'—', libEst:'—', envioAtu:'—', libAtu:'—', deadline:'—', aprovacao:'—', libReal:'—', nome:n }));
+      if(etapas.length===0){ etapas=[{ mfEtapa:'—', peso:0, valor:0, status:'Etapa única', envioEst:'—', libEst:'—', envioAtu:'—', libAtu:'—', deadline:'—', aprovacao:'—', libReal:'—' }]; }
+      if(!id || !nome){ alert('Preencha ao menos Nº (FLUIG) e Nome da Obra.'); return; }
+      obras.unshift({ id, mf, nome, cliente, lider, local, pesoOrcado, pesoLiberar:0, valorFechado, valorLiberar:0, status:'Triagem', fluig: id ? `FL-${id}`:'—', etapas });
+      renderKPIs(); initFiltroLider(); renderTable();
+      closeModal(); ['#f_id','#f_mf','#f_nome','#f_cliente','#f_lider','#f_local','#f_peso_orcado','#f_valor_fechado','#f_etapas'].forEach(s=> $(s).value='');
+    });
+
+    // ===== Modal Gerenciar Etapas (duplo clique) =====
+    let obraAtual = null;
+    function openGerenciarEtapas(o){ obraAtual = o; $('#ge_nome').textContent = o.nome; $('#ge_lista').innerHTML = renderListaEtapas(o); $('#backEtapas').style.display = 'flex'; }
+    function closeGerenciarEtapas(){ $('#backEtapas').style.display = 'none'; obraAtual=null; }
+    $('#ge_cancel').addEventListener('click', closeGerenciarEtapas);
+    $('#ge_add').addEventListener('click', ()=>{
+      if(!obraAtual) return; const nome = $('#ge_nova').value.trim(); if(!nome) return;
+      const idx = (obraAtual.etapas||[]).length + 1; const mfBase = obraAtual.mf || '—';
+      const etapa = { mfEtapa: mfBase!=='—'? `${mfBase}-${String(idx).padStart(2,'0')}`:'—', peso:0, valor:0, status:'Triagem', envioEst:'—', libEst:'—', envioAtu:'—', libAtu:'—', deadline:'—', aprovacao:'—', libReal:'—', nome };
+      obraAtual.etapas = (obraAtual.etapas||[]).concat([etapa]);
+      $('#ge_lista').innerHTML = renderListaEtapas(obraAtual);
+      const sub = document.querySelector(`tr.subrow[data-sub="${obraAtual.id}"] td`); if(sub){ sub.innerHTML = renderSubtable(obraAtual); }
+      renderKPIs(); $('#ge_nova').value='';
+    });
+    function renderListaEtapas(o){
+      const ets = (o.etapas && o.etapas.length)? o.etapas : [{ mfEtapa:'—', nome:'Etapa única', status:'Etapa única' }];
+      return ets.map((e,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #1f2b49;border-radius:10px;padding:8px;margin:6px 0;">
+        <div><strong>${e.nome||e.mfEtapa}</strong><div style="color:#9ca3af;font-size:12px;">${e.mfEtapa} • ${e.status}</div></div>
+        <button class="btn" data-del="${i}">Remover</button>
+      </div>`).join('');
+    }
+    $('#ge_lista').addEventListener('click', (ev)=>{ const btn = ev.target.closest('button[data-del]'); if(!btn || !obraAtual) return; const idx = +btn.getAttribute('data-del'); obraAtual.etapas.splice(idx,1); $('#ge_lista').innerHTML = renderListaEtapas(obraAtual); const sub = document.querySelector(`tr.subrow[data-sub="${obraAtual.id}"] td`); if(sub){ sub.innerHTML = renderSubtable(obraAtual); } renderKPIs(); });
+
+    // ===== Busca e Tabs =====
+    $('#search').addEventListener('input', ()=> renderTable());
+    $$('#tabs .tab').forEach(t=> t.addEventListener('click', ()=>{ $$('#tabs .tab').forEach(x=>x.classList.remove('active')); t.classList.add('active'); const tab=t.dataset.tab; $$('.panel').forEach(p=> p.hidden = p.dataset.panel !== tab); }));
+
+    // Init
+    renderKPIs(); initFiltroLider(); renderTable();
+  </script>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="sync.js"></script>
+</body>
+</html>
